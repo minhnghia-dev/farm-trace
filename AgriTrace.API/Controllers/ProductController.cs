@@ -83,7 +83,7 @@ namespace AgriTrace.API.Controllers
                     return NotFound(new { message = "Không tìm thấy thông tin sản phẩm trên Blockchain!" });
                 }
 
-                string trackingUrl = $"https://agritrace.io/track/{code}";
+                string webUrl = $"https://farm-trace.netlify.app?code={productCode}";
                 string qrCodeBase64 = _qrCodeService.GenerateQRCode(trackingUrl);
 
                 var response = new
