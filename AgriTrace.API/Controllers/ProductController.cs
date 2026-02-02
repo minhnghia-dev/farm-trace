@@ -84,7 +84,7 @@ namespace AgriTrace.API.Controllers
                 }
 
                 // SỬA LỖI TẠI ĐÂY: Sử dụng biến 'code' từ tham số và tạo 'webUrl' đúng tên miền Netlify
-                string webUrl = $"https://zesty-pithivier-ca08ff.netlify.app?code={code}";
+                string webUrl = $"https://farm-trace.netlify.app?code={code}";
                 string qrCodeBase64 = _qrCodeService.GenerateQRCode(webUrl);
 
                 var response = new
