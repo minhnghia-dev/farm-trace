@@ -1,15 +1,17 @@
 using QRCoder;
-using System.Drawing;
-using System.Drawing.Imaging;
+using System;
 
 namespace AgriTrace.API.Services
 {
     public class QRCodeService
     {
-        public string GenerateQRCode(string text)
+        public string GenerateQRCode(string productCode)
         {
+            // Đây là link Netlify của bạn
+            string trackingUrl = $"https://zesty-pithivier-ca08ff.netlify.app?code={productCode}";
+
             using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
-            using (QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q))
+            using (QRCodeData qrCodeData = qrGenerator.CreateQrCode(trackingUrl, QRCodeGenerator.ECCLevel.Q))
             using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
             {
                 byte[] qrCodeAsPngByteArr = qrCode.GetGraphic(20);
