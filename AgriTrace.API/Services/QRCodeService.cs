@@ -8,7 +8,7 @@ namespace AgriTrace.API.Services
         public string GenerateQRCode(string productCode)
         {
             // Đây là link Netlify của bạn
-            string trackingUrl = $"https://zesty-pithivier-ca08ff.netlify.app?code={productCode}";
+            string trackingUrl = $"https://farm-trace.netlify.app?code={productCode}";
 
             using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
             using (QRCodeData qrCodeData = qrGenerator.CreateQrCode(trackingUrl, QRCodeGenerator.ECCLevel.Q))
