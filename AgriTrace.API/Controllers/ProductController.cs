@@ -83,8 +83,9 @@ namespace AgriTrace.API.Controllers
                     return NotFound(new { message = "Không tìm thấy thông tin sản phẩm trên Blockchain!" });
                 }
 
-                string webUrl = $"https://farm-trace.netlify.app?code={productCode}";
-                string qrCodeBase64 = _qrCodeService.GenerateQRCode(trackingUrl);
+                // SỬA LỖI TẠI ĐÂY: Sử dụng biến 'code' từ tham số và tạo 'webUrl' đúng tên miền Netlify
+                string webUrl = $"https://zesty-pithivier-ca08ff.netlify.app?code={code}";
+                string qrCodeBase64 = _qrCodeService.GenerateQRCode(webUrl);
 
                 var response = new
                 {
