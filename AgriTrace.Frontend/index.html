@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriTrace 3.0 - Hệ thống truy xuất nguồn gốc 3 giai đoạn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .active-tab { border-bottom: 4px solid #16a34a; color: #16a34a; }
+        .glass-effect { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .stage-card { transition: all 0.3s ease; }
+        .stage-card:hover { transform: translateY(-5px); }
+        @keyframes fadeOut { 
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- Header -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-leaf text-green-600 text-2xl"></i>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">AgriTrace <span class="text-green-600 font-light">3.0</span></h1>
+            </div>
+            <div class="flex space-x-6">
+                <button onclick="switchTab('trace')" id="tabTrace" class="active-tab font-bold py-2 transition-all">Người tiêu dùng</button>
+                <button onclick="switchTab('admin')" id="tabAdmin" class="font-bold py-2 transition-all text-slate-400">Nhà sản xuất</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-10 max-w-6xl">
+        
+        <!-- SECTION 1: TRUY XUẤT (VIEWER) -->
+        <section id="sectionTrace" class="block">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-800">Truy xuất nguồn gốc 3 giai đoạn</h2>
+                <p class="text-slate-500">Nhập mã hoặc quét QR để xác thực dữ liệu trên Blockchain</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm flex gap-2 mb-8 border border-slate-100">
+                <input type="text" id="searchCode" placeholder="Nhập mã sản phẩm (vd: LUA001)..." 
+                       class="flex-1 p-4 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition">
+                <button onclick="fetchProduct()" class="bg-green-600 text-white px-8 py-4 rounded-xl hover:bg-green-700 font-bold transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div id="traceResult" class="hidden space-y-8">
+                <!-- Header sản phẩm -->
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-green-600 p-8 text-white flex justify-between items-center">
+                        <div>
+                            <h3 id="resName" class="text-4xl font-bold">Tên sản phẩm</h3>
+                            <p id="resCodeDisplay" class="opacity-80">Mã định danh: #---</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-white/20 px-4 py-2 rounded-full text-xs font-mono uppercase tracking-widest">Sepolia Certified</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Giai đoạn -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Giai đoạn 1: Sản xuất -->
+                    <div class="stage-card bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-blue-100 p-3 rounded-full mr-3">
+                                <i class="fas fa-seed text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Giai đoạn Sản xuất</h4>
+                                <p class="text-xs text-slate-400">Khởi tạo</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Địa điểm:</span>
+                                <span id="prodLocation" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Người sản xuất:</span>
+                                <span id="prodProducer" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Ngày bắt đầu:</span>
+                                <span id="prodStartDate" class="font-semibold text-slate-800">---</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Giai đoạn 2: Thu hoạch -->
+                    <div class="stage-card bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-yellow-100 p-3 rounded-full mr-3">
+                                <i class="fas fa-wheat-awn text-yellow-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Giai đoạn Thu hoạch</h4>
+                                <p class="text-xs text-slate-400">Chế biến</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Ngày thu hoạch:</span>
+                                <span id="harvDate" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Sản lượng:</span>
+                                <span id="harvQty" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Phương pháp xử lý:</span>
+                                <span id="harvMethod" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Đơn vị:</span>
+                                <span id="harvUnit" class="font-semibold text-slate-800">---</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Giai đoạn 3: Phân phối -->
+                    <div class="stage-card bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-orange-100 p-3 rounded-full mr-3">
+                                <i class="fas fa-truck text-orange-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Giai đoạn Phân phối</h4>
+                                <p class="text-xs text-slate-400">Tiêu thụ</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Đơn vị phân phối:</span>
+                                <span id="distUnit" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Điểm bán:</span>
+                                <span id="distPoint" class="font-semibold text-slate-800">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-slate-600">Trạng thái:</span>
+                                <span id="distStatus" class="font-semibold text-slate-800">---</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Code -->
+                <div class="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center border border-slate-200">
+                    <p class="text-xs font-bold text-slate-400 mb-4 uppercase">Chứng nhận số (QR)</p>
+                    <img id="resQR" src="" alt="QR" class="w-56 h-56 border-8 border-white shadow-lg rounded-xl mb-4">
+                    <button onclick="window.print()" class="text-green-600 text-sm font-bold hover:underline">
+                        <i class="fas fa-print mr-1"></i> In tem QR
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: ĐĂNG KÝ 3 GIAI ĐOẠN (ADMIN) -->
+        <section id="sectionAdmin" class="hidden space-y-8">
+            <!-- Tab cho 3 giai đoạn -->
+            <div class="flex border-b border-slate-300 gap-4 bg-white rounded-t-2xl p-2 shadow-md">
+                <button onclick="switchStageTab('production')" id="stageTabProduction" 
+                        class="flex-1 py-4 font-bold text-center border-b-2 border-blue-500 text-blue-600">
+                    <i class="fas fa-seed mr-2"></i> Sản xuất
+                </button>
+                <button onclick="switchStageTab('harvest')" id="stageTabHarvest"
+                        class="flex-1 py-4 font-bold text-center border-b-2 border-transparent text-slate-400">
+                    <i class="fas fa-wheat-awn mr-2"></i> Thu hoạch
+                </button>
+                <button onclick="switchStageTab('distribution')" id="stageTabDistribution"
+                        class="flex-1 py-4 font-bold text-center border-b-2 border-transparent text-slate-400">
+                    <i class="fas fa-truck mr-2"></i> Phân phối
+                </button>
+            </div>
+
+            <!-- Stage 1: Sản xuất -->
+            <div id="stageProduction" class="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Đăng ký Giai đoạn Sản xuất</h2>
+                <p class="text-slate-500 text-sm mb-6">Thông tin sẽ được lưu vĩnh viễn trên Blockchain Sepolia</p>
+                
+                <form id="productionForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Mã sản phẩm (Code) *</label>
+                        <input type="text" id="prodCode" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: LUA_001" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Tên nông sản *</label>
+                        <input type="text" id="prodName" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: Lúa giống" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Địa điểm sản xuất *</label>
+                        <input type="text" id="prodLocationInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: Thôn Hạ, Yên Lý" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Ngày bắt đầu sản xuất *</label>
+                        <input type="date" id="prodStartDateInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Người sản xuất *</label>
+                        <input type="text" id="prodProducerInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: Công ty nông nghiệp ABC" required>
+                    </div>
+                    <div class="md:col-span-2 pt-4">
+                        <button type="button" onclick="submitProduction()" id="btnProduction" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-blue-700 transition shadow-xl">
+                            <i class="fas fa-cube mr-2"></i> GHI LÊN BLOCKCHAIN - GIAI ĐOẠN 1
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Stage 2: Thu hoạch -->
+            <div id="stageHarvest" class="hidden bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Đăng ký Giai đoạn Thu hoạch</h2>
+                <p class="text-slate-500 text-sm mb-6">Nhập mã sản phẩm từ giai đoạn 1</p>
+                
+                <form id="harvestForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Mã sản phẩm (từ giai đoạn 1) *</label>
+                        <input type="text" id="harvCode" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="VD: LUA_001" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Ngày thu hoạch *</label>
+                        <input type="date" id="harvDateInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Sản lượng *</label>
+                        <input type="number" id="harvQtyInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="VD: 5000" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Hình thức xử lý *</label>
+                        <input type="text" id="harvMethodInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="VD: Phơi nắng" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Ngày đóng gói *</label>
+                        <input type="date" id="packDateInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Đơn vị thực hiện *</label>
+                        <input type="text" id="harvUnitInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="VD: Công ty chế biến XYZ" required>
+                    </div>
+                    <div class="md:col-span-2 pt-4">
+                        <button type="button" onclick="submitHarvest()" id="btnHarvest" class="w-full bg-yellow-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-yellow-700 transition shadow-xl">
+                            <i class="fas fa-cube mr-2"></i> GHI LÊN BLOCKCHAIN - GIAI ĐOẠN 2
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Stage 3: Phân phối -->
+            <div id="stageDistribution" class="hidden bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Đăng ký Giai đoạn Phân phối</h2>
+                <p class="text-slate-500 text-sm mb-6">Nhập mã sản phẩm từ giai đoạn 1</p>
+                
+                <form id="distributionForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Mã sản phẩm (từ giai đoạn 1) *</label>
+                        <input type="text" id="distCode" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="VD: LUA_001" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Đơn vị phân phối *</label>
+                        <input type="text" id="distUnitInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="VD: Công ty logistics ABC" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Ngày xuất kho *</label>
+                        <input type="date" id="exitDateInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Điểm bán lẻ *</label>
+                        <input type="text" id="salePointInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="VD: Siêu thị ABC, Hà Nội" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Trạng thái sản phẩm *</label>
+                        <select id="statusInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" required>
+                            <option value="">-- Chọn trạng thái --</option>
+                            <option value="Tốt">Tốt</option>
+                            <option value="Bình thường">Bình thường</option>
+                            <option value="Cảnh báo">Cảnh báo</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-600 uppercase">Ngày hoàn tất phân phối *</label>
+                        <input type="date" id="completeDateInput" class="w-full p-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" required>
+                    </div>
+                    <div class="md:col-span-2 pt-4">
+                        <button type="button" onclick="submitDistribution()" id="btnDistribution" class="w-full bg-orange-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-orange-700 transition shadow-xl">
+                            <i class="fas fa-cube mr-2"></i> GHI LÊN BLOCKCHAIN - GIAI ĐOẠN 3
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Status Overlays -->
+        <div id="loader" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[100] backdrop-blur-sm">
+            <div class="bg-white p-8 rounded-3xl text-center shadow-2xl">
+                <div class="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="font-bold text-slate-700">Đang giao tiếp với Smart Contract...</p>
+                <p class="text-xs text-slate-400 mt-2">Vui lòng đợi mạng lưới Sepolia xác thực</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "http://localhost:5255/api/products";
+
+        function switchTab(tab) {
+            document.getElementById('sectionTrace').className = tab === 'trace' ? 'block' : 'hidden';
+            document.getElementById('sectionAdmin').className = tab === 'admin' ? 'block' : 'hidden';
+            document.getElementById('tabTrace').className = tab === 'trace' ? 'active-tab font-bold py-2' : 'font-bold py-2 text-slate-400';
+            document.getElementById('tabAdmin').className = tab === 'admin' ? 'active-tab font-bold py-2' : 'font-bold py-2 text-slate-400';
+        }
+
+        function switchStageTab(stage) {
+            ['production', 'harvest', 'distribution'].forEach(s => {
+                document.getElementById(`stage${s.charAt(0).toUpperCase() + s.slice(1)}`).className = s === stage ? 'bg-white rounded-3xl shadow-xl p-8 border border-slate-200' : 'hidden bg-white rounded-3xl shadow-xl p-8 border border-slate-200';
+                document.getElementById(`stageTab${s.charAt(0).toUpperCase() + s.slice(1)}`).className = s === stage 
+                    ? 'flex-1 py-4 font-bold text-center border-b-2 border-green-500 text-green-600'
+                    : 'flex-1 py-4 font-bold text-center border-b-2 border-transparent text-slate-400';
+            });
+        }
+
+        function clearProductData() {
+            // Xóa tất cả dữ liệu cũ
+            document.getElementById('resName').innerText = "---";
+            document.getElementById('prodLocation').innerText = "---";
+            document.getElementById('prodProducer').innerText = "---";
+            document.getElementById('prodStartDate').innerText = "---";
+            document.getElementById('harvDate').innerText = "---";
+            document.getElementById('harvQty').innerText = "---";
+            document.getElementById('harvMethod').innerText = "---";
+            document.getElementById('harvUnit').innerText = "---";
+            document.getElementById('distUnit').innerText = "---";
+            document.getElementById('distPoint').innerText = "---";
+            document.getElementById('distStatus').innerText = "---";
+            document.getElementById('resQR').src = "";
+            document.getElementById('resCodeDisplay').innerText = "Mã định danh: #---";
+            document.getElementById('traceResult').classList.add('hidden');
+        }
+
+        async function fetchProduct() {
+            const code = document.getElementById('searchCode').value.trim();
+            if(!code) {
+                showNotification("Vui lòng nhập mã sản phẩm!", "warning");
+                clearProductData();
+                return;
+            }
+            
+            // Xóa dữ liệu cũ ngay khi bắt đầu tìm kiếm
+            clearProductData();
+            toggleLoader(true);
+            try {
+                const res = await fetch(`${API_BASE}/${code}`);
+                
+                if(!res.ok) {
+                    const errorData = await res.json();
+                    const errorMsg = errorData.message || "Không tìm thấy thông tin sản phẩm!";
+                    showNotification(errorMsg, "error");
+                    clearProductData();
+                    toggleLoader(false);
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // Kiểm tra dữ liệu tồn tại
+                if(!data || !data.productionStage) {
+                    showNotification("❌ Không tìm thấy thông tin sản phẩm trên Blockchain!", "error");
+                    clearProductData();
+                    toggleLoader(false);
+                    return;
+                }
+                
+                // Production stage
+                document.getElementById('resName').innerText = data.productionStage.productName || "---";
+                document.getElementById('prodLocation').innerText = data.productionStage.productLocation || "---";
+                document.getElementById('prodProducer').innerText = data.productionStage.producer || "---";
+                document.getElementById('prodStartDate').innerText = data.productionStage.productionStartDate ? formatDate(data.productionStage.productionStartDate) : "---";
+                
+                // Harvest stage
+                document.getElementById('harvDate').innerText = data.harvestStage && data.harvestStage.harvestDate ? formatDate(data.harvestStage.harvestDate) : "---";
+                document.getElementById('harvQty').innerText = data.harvestStage && data.harvestStage.quantity ? data.harvestStage.quantity : "---";
+                document.getElementById('harvMethod').innerText = data.harvestStage && data.harvestStage.processingMethod ? data.harvestStage.processingMethod : "---";
+                document.getElementById('harvUnit').innerText = data.harvestStage && data.harvestStage.processingUnit ? data.harvestStage.processingUnit : "---";
+                
+                // Distribution stage
+                document.getElementById('distUnit').innerText = data.distributionStage && data.distributionStage.distributionUnit ? data.distributionStage.distributionUnit : "---";
+                document.getElementById('distPoint').innerText = data.distributionStage && data.distributionStage.salePoint ? data.distributionStage.salePoint : "---";
+                document.getElementById('distStatus').innerText = data.distributionStage && data.distributionStage.productStatus ? data.distributionStage.productStatus : "---";
+                
+                document.getElementById('resQR').src = data.qrCode || "";
+                document.getElementById('resCodeDisplay').innerText = `Mã định danh: #${code}`;
+                
+                document.getElementById('traceResult').classList.remove('hidden');
+                showNotification("✅ Tìm thấy thông tin sản phẩm!", "success");
+            } catch (e) { 
+                showNotification("❌ Lỗi: " + e.message, "error");
+                clearProductData();
+            }
+            toggleLoader(false);
+        }
+
+        function showNotification(message, type = "info") {
+            // Tạo notification element
+            const notification = document.createElement('div');
+            const bgColor = type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : "bg-blue-500";
+            const bgWarning = type === "warning" ? "bg-yellow-500" : bgColor;
+            
+            notification.innerHTML = `
+                <div class="fixed top-4 right-4 ${bgWarning} text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 z-[200] animate-pulse">
+                    <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : type === "warning" ? "warning" : "info-circle"}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Tự động xóa sau 4 giây
+            setTimeout(() => {
+                notification.style.animation = "fadeOut 0.5s ease-out forwards";
+                setTimeout(() => notification.remove(), 500);
+            }, 4000);
+        }
+
+        function formatDate(timestamp) {
+            if (typeof timestamp === 'string' && timestamp.includes('-')) return timestamp;
+            const d = new Date(parseInt(timestamp) * 1000);
+            return d.toLocaleDateString('vi-VN');
+        }
+
+        async function submitProduction() {
+            const body = {
+                productCode: document.getElementById('prodCode').value,
+                productName: document.getElementById('prodName').value,
+                productLocation: document.getElementById('prodLocationInput').value,
+                productionStartDate: Math.floor(new Date(document.getElementById('prodStartDateInput').value).getTime() / 1000),
+                producer: document.getElementById('prodProducerInput').value
+            };
+
+            if(!body.productCode || !body.productName) return alert("Vui lòng nhập đủ thông tin!");
+
+            toggleLoader(true);
+            try {
+                const res = await fetch(`${API_BASE}/production`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                alert("Giai đoạn 1 thành công! Hash: " + data.transactionHash);
+                document.getElementById('productionForm').reset();
+                switchStageTab('harvest');
+            } catch (e) { alert("Lỗi gửi dữ liệu!"); }
+            toggleLoader(false);
+        }
+
+        async function submitHarvest() {
+            const body = {
+                productCode: document.getElementById('harvCode').value,
+                harvestDate: Math.floor(new Date(document.getElementById('harvDateInput').value).getTime() / 1000),
+                quantity: parseInt(document.getElementById('harvQtyInput').value),
+                processingMethod: document.getElementById('harvMethodInput').value,
+                packingDate: Math.floor(new Date(document.getElementById('packDateInput').value).getTime() / 1000),
+                processingUnit: document.getElementById('harvUnitInput').value
+            };
+
+            if(!body.productCode) return alert("Vui lòng nhập mã sản phẩm!");
+
+            toggleLoader(true);
+            try {
+                const res = await fetch(`${API_BASE}/harvest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                alert("Giai đoạn 2 thành công! Hash: " + data.transactionHash);
+                document.getElementById('harvestForm').reset();
+                switchStageTab('distribution');
+            } catch (e) { alert("Lỗi gửi dữ liệu!"); }
+            toggleLoader(false);
+        }
+
+        async function submitDistribution() {
+            const body = {
+                productCode: document.getElementById('distCode').value,
+                distributionUnit: document.getElementById('distUnitInput').value,
+                warehouseExitDate: Math.floor(new Date(document.getElementById('exitDateInput').value).getTime() / 1000),
+                salePoint: document.getElementById('salePointInput').value,
+                productStatus: document.getElementById('statusInput').value,
+                distributionCompletedDate: Math.floor(new Date(document.getElementById('completeDateInput').value).getTime() / 1000)
+            };
+
+            if(!body.productCode) return alert("Vui lòng nhập mã sản phẩm!");
+
+            toggleLoader(true);
+            try {
+                const res = await fetch(`${API_BASE}/distribution`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                alert("Giai đoạn 3 thành công! Hash: " + data.transactionHash);
+                document.getElementById('distributionForm').reset();
+                switchTab('trace');
+            } catch (e) { alert("Lỗi gửi dữ liệu!"); }
+            toggleLoader(false);
+        }
+
+        function toggleLoader(show) {
+            document.getElementById('loader').classList.toggle('hidden', !show);
+        }
+
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('code')) {
+                document.getElementById('searchCode').value = urlParams.get('code');
+                fetchProduct();
+            }
+        }
+    </script>
+</body>
+</html>
