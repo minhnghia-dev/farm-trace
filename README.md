@@ -15,19 +15,6 @@ Phiên bản 3.0 đánh dấu bước chuyển quan trọng từ mô hình **ghi
 
 ---
 
-## Tổng quan kiến trúc AgriTrace 3.0
-
-### So sánh phiên bản
-
-| Phiên bản | Kiến trúc |
-|---------|----------|
-| **v1 – v2** | Sản phẩm → Thông tin tĩnh |
-| **v3.0** | Sản phẩm → Mảng các giai đoạn (Stages) |
-
-Mỗi giai đoạn được ghi nhận **vĩnh viễn trên Blockchain**, không thể chỉnh sửa hay xóa.
-
----
-
 ## Demo triển khai
 
 - **Frontend**: Netlify (Static Web) - Link: https://farm-trace.netlify.app
@@ -35,34 +22,6 @@ Mỗi giai đoạn được ghi nhận **vĩnh viễn trên Blockchain**, không
 - **Blockchain**: EVM-compatible (Hardhat / Local / Testnet)
 
 Người dùng quét **QR Code** để xem **timeline đầy đủ của sản phẩm**.
-
----
-
-## Tính năng chính (v3.0)
-
-### Multi-stage Tracking
-- Thêm **không giới hạn giai đoạn** cho mỗi sản phẩm
-- Mỗi giai đoạn tương ứng một transaction Blockchain
-
-### Blockchain Immortality
-- Dữ liệu sau khi ghi **không thể sửa đổi**
-- Đảm bảo tính trung thực tuyệt đối
-
-### Dynamic QR Code
-- Mỗi sản phẩm có **1 QR Code duy nhất**
-- Nội dung tự động cập nhật khi có giai đoạn mới
-
-### Real-time Timeline
-- Hiển thị dòng thời gian theo thứ tự:
-  - Thời gian
-  - Địa điểm
-  - Mô tả giai đoạn
-
-### Khả năng mở rộng
-- Có thể bổ sung:
-  - Kiểm định chất lượng
-  - Chứng nhận VietGAP / GlobalGAP
-  - Xuất khẩu / Hải quan
 
 ---
 
